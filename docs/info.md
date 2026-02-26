@@ -9,12 +9,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+Will go into more detail, basically just some table lookups using SPI and an adder
 
 ## How to test
 
-Explain how to use your project
+Likely will be a bit complicated
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+Using RPI SPI simulator
