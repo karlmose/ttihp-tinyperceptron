@@ -38,9 +38,7 @@ module spi_module
 	wire falling_sclk_edge;
 	
 	reg [SPI_WORD_LEN - 1:0] data_word_recv_reg;
-	
-	reg [SPI_WORD_LEN - 1:1] bit_counter;
-	
+	reg [$clog2(SPI_WORD_LEN)-1:0] bit_counter;
 	reg [`SPI_MODULE_COMMAND_LEN - 1:0]spi_status;
 
 	assign is_ready = is_ready_reg;
