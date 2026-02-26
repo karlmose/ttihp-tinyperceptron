@@ -1,0 +1,8 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1771106076" />
+    <testcase name="test_interactive" classname="test_interactive" file="/Users/karlh.mose/tiny_tapeout/tiny_perceptron/verilog/test/cocotb/test_interactive.py" lineno="48" time="132391.48474812508" sim_time_ns="340.0" ratio_time="0.0025681409997542538">
+      <failure error_type="EOFError" error_msg="" />
+    </testcase>
+  </testsuite>
+</testsuites>
