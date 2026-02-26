@@ -93,7 +93,7 @@ module ram_interface (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= STATE_IDLE;
-            wait_cnt <= cs_wait_cycles;
+            wait_cnt <= 8'd0;
             
             spi_start <= 1'b0;
             spi_data_to_send <= 32'd0;
