@@ -115,7 +115,7 @@ class SpiMasterDriver:
         await self.send_word(OP_RESET_BUF << 12)
 
     async def cmd_set_clk_div(self, val_3bit):
-        """Send OP_SET_CLK_DIV. val=0→/2, 1→/4, 2→/8 (default), 3→/16, etc."""
+        """Send OP_SET_CLK_DIV. val=0→/2, 1→/4 (default), 2→/8, 3→/16, etc."""
         word = (OP_SET_CLK_DIV << 12) | (val_3bit & 0x7)
         await self.send_word(word)
 

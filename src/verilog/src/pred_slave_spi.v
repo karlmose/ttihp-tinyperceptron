@@ -111,8 +111,8 @@ module pred_slave_spi (
             reset_buffer_valid <= 1'b0;
             index <= 12'd0;
             update_sign <= 1'b0;
-            cs_wait_cycles <= 8'd15;
-            spi_clk_div <= 3'd2;  // Default: div-by-8 (100MHz → 12.5MHz)
+            cs_wait_cycles <= 8'd8;
+            spi_clk_div <= 3'd1;  // Default: div-by-4 (50MHz → 12.5MHz)
             update_done_flag <= 1'b0;
         end else begin
             spi_reset <= 1'b0;

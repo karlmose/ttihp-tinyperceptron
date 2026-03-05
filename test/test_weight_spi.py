@@ -17,13 +17,13 @@ async def do_start(dut):
     dut.inc.value = 0
     dut.dec.value = 0
     dut.spi_miso.value = 0
-    dut.cs_wait_cycles.value = 15  # Was a parameter, now a wire input
-    dut.spi_clk_div.value = 2     # div-by-8
+    dut.cs_wait_cycles.value = 8   # Match default for 50MHz
+    dut.spi_clk_div.value = 1     # div-by-4 (50MHz → 12.5MHz)
     
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
-    # Wait for CS_WAIT_CYCLES (15) to expire
-    await ClockCycles(dut.clk, 20)
+    # Wait for CS_WAIT_CYCLES (8) to expire
+    await ClockCycles(dut.clk, 15)
     
     assert dut.spi_cs.value == 1, "CS should be high after reset"
 

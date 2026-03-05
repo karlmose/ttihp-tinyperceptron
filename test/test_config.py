@@ -122,9 +122,9 @@ async def test_set_clk_div(dut):
     """Verify OP_SET_CLK_DIV changes the SPI master clock divisor."""
     spi = await start_clocks(dut)
 
-    # Check default: 2 (div-by-8, 100MHz → 12.5MHz)
+    # Check default: 1 (div-by-4, 50MHz → 12.5MHz)
     clk_div = int(dut.dut.slave.spi_clk_div.value)
-    assert clk_div == 2, f"Expected default clk_div=2, got {clk_div}"
+    assert clk_div == 1, f"Expected default clk_div=1, got {clk_div}"
 
     # Set to 3 (div-by-16)
     await spi.cmd_set_clk_div(3)
@@ -142,10 +142,10 @@ async def test_set_clk_div(dut):
     assert sum_signed == 77, f"Expected 77 at clk_div=3, got {sum_signed}"
 
     # Restore default
-    await spi.cmd_set_clk_div(2)
+    await spi.cmd_set_clk_div(1)
     await ClockCycles(dut.clk, 10)
     clk_div = int(dut.dut.slave.spi_clk_div.value)
-    assert clk_div == 2, f"Expected restored clk_div=2, got {clk_div}"
+    assert clk_div == 1, f"Expected restored clk_div=1, got {clk_div}"
 
 
 @cocotb.test()

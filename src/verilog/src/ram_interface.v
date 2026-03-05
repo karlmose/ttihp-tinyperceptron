@@ -51,7 +51,7 @@ module ram_interface (
     // -------------------------------------------------------------------------
     // Configurable Clock Divider — free-running counter, bit-select via spi_clk_div
     // spi_clk_div=0 → counter[0] → div-by-2
-    // spi_clk_div=2 → counter[2] → div-by-8 (default, 100MHz → 12.5MHz)
+    // spi_clk_div=1 → counter[1] → div-by-4 (default, 50MHz → 12.5MHz)
     // -------------------------------------------------------------------------
     reg [7:0] clk_div_counter;
     reg clk_div_reset;
