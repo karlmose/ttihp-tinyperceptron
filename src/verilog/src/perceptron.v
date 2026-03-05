@@ -5,7 +5,7 @@
 `timescale 1ns/1ps
 
 module perceptron #(
-    parameter ADDR_WIDTH = 10,
+    parameter ADDR_WIDTH = 9,
     parameter MAX_WEIGHTS = 4
 ) (
     input wire clk,
@@ -25,7 +25,7 @@ module perceptron #(
     output wire update_done,
 
     // RAM interface control (directly to ram_interface)
-    output wire [ADDR_WIDTH+2:0] ram_addr,
+    output wire [ADDR_WIDTH+1:0] ram_addr,
     output wire ram_start_read,
     output wire ram_inc,
     output wire ram_dec,
@@ -58,7 +58,7 @@ module perceptron #(
     assign update_done = update_done_reg;
 
     // RAM interface address: {buffer_slot[2:0], index[ADDR_WIDTH-1:0]}
-    assign ram_addr = {no_processed_in_buffer, index_buffer[no_processed_in_buffer * ADDR_WIDTH +: ADDR_WIDTH]};
+    assign ram_addr = {no_processed_in_buffer[1:0], index_buffer[no_processed_in_buffer * ADDR_WIDTH +: ADDR_WIDTH]};
 
     // Read when not busy and we have unprocessed entries
     assign ram_start_read = (!ram_busy && no_processed_in_buffer < no_in_buffer) &&

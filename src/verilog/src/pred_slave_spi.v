@@ -22,7 +22,7 @@ module pred_slave_spi (
     output reg add_weight_valid,    // Pulse: OP_ADD
     output reg update_weight_valid, // Pulse: OP_UPDATE
     output reg reset_buffer_valid,  // Pulse: OP_RESET_BUF
-    output reg [11:0] index,        // 12-bit payload
+    output reg [8:0] index,         // 9-bit payload
     output reg update_sign,         // LSB of payload for Update
 
     // Configuration outputs
@@ -109,7 +109,7 @@ module pred_slave_spi (
             add_weight_valid <= 1'b0;
             update_weight_valid <= 1'b0;
             reset_buffer_valid <= 1'b0;
-            index <= 12'd0;
+            index <= 9'd0;
             update_sign <= 1'b0;
             cs_wait_cycles <= 8'd8;
             spi_clk_div <= 2'd1;  // Default: div-by-4 (50MHz → 12.5MHz)
@@ -131,12 +131,12 @@ module pred_slave_spi (
                 case (spi_data_recv[15:12])
                     OP_ADD: begin
                         add_weight_valid <= 1'b1;
-                        index <= spi_data_recv[11:0];
+                        index <= spi_data_recv[8:0];
                         spi_data_send <= 16'd0;
                     end
                     OP_UPDATE: begin
                         update_weight_valid <= 1'b1;
-                        index <= spi_data_recv[11:0];
+                        index <= spi_data_recv[8:0];
                         update_sign <= spi_data_recv[0];
                         spi_data_send <= 16'd0;
                     end

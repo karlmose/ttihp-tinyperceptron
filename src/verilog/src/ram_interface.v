@@ -8,7 +8,7 @@ module ram_interface (
     input wire [7:0] cs_wait_cycles, // Configurable CS recovery time
     input wire [1:0] spi_clk_div,   // Clock divisor bit-select (div = 2^(n+1))
 
-    input wire [12:0] addr,     // 13-bit address
+    input wire [10:0] addr,     // 11-bit address (2-bit weight index + 9-bit addr)
     input wire start_read,      // Pulse to start reading
     input wire inc,             // Pulse to increment weight
     input wire dec,             // Pulse to decrement weight
@@ -93,7 +93,7 @@ module ram_interface (
         .is_ready(spi_ready)
     );
 
-    wire [15:0] full_addr = {3'b000, addr};
+    wire [15:0] full_addr = {5'b00000, addr};
     localparam CMD_READ  = 8'h03;
     localparam CMD_WRITE = 8'h02;
 

@@ -40,7 +40,7 @@ module pred_top (
     wire        slave_add_weight;
     wire        slave_update;
     wire        slave_reset_buffer;
-    wire [11:0] slave_index;
+    wire [8:0] slave_index;
     wire        slave_update_sign;
 
     // -----------------------------------------------------------------
@@ -52,7 +52,7 @@ module pred_top (
     // -----------------------------------------------------------------
     // Internal wires: perceptron ↔ ram_interface
     // -----------------------------------------------------------------
-    wire [12:0] ram_addr;
+    wire [10:0] ram_addr;
     wire        ram_start_read;
     wire        ram_inc;
     wire        ram_dec;
@@ -104,7 +104,7 @@ module pred_top (
         .rst_n(rst_n),
 
         // Control from slave
-        .weight_addr(slave_index[9:0]),
+        .weight_addr(slave_index),
         .add_weight(slave_add_weight),
         .reset_buffer(slave_reset_buffer),
         .update(slave_update),
