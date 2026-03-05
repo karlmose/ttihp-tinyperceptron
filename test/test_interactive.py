@@ -17,7 +17,7 @@ import cocotb
 from cocotb.triggers import ClockCycles
 from helpers import (
     start_clocks, parse_read_response,
-    OP_ADD, OP_UPDATE, OP_READ, OP_SET_CS_WAIT, OP_RESET_BUF,
+    OP_ADD, OP_UPDATE, OP_READ, OP_SET_CS_WAIT, OP_RESET_BUF, OP_SET_CLK_DIV,
     OP_RESP_VALID, OP_RESP_INVALID, OP_RESP_UPDATE_DONE,
 )
 
@@ -36,6 +36,7 @@ MENU = """
 ║  3 — OP_READ  (poll result)   ║
 ║  4 — OP_SET_CS_WAIT           ║
 ║  5 — OP_RESET_BUF             ║
+║  6 — OP_SET_CLK_DIV           ║
 ║  q — Quit                     ║
 ╚═══════════════════════════════╝
 """
@@ -140,6 +141,23 @@ async def test_interactive(dut):
 
             await ClockCycles(dut.clk, 20)
             print(f"     (waited 20 sysclk cycles for reset to settle)")
+
+        # ── OP_SET_CLK_DIV ──────────────────────────────────────────
+        elif choice == "6":
+            raw = input("  Clock div bit-select (0=/2, 1=/4, 2=/8, 3=/16, ..., 7=/256) > ").strip()
+            try:
+                val = int(raw, 0)
+            except ValueError:
+                print(f"  ✗ Invalid value: {raw}")
+                continue
+            val &= 0x7
+
+            word = (OP_SET_CLK_DIV << 12) | val
+            resp = await spi.send_word(word)
+            tx_count += 1
+
+            print(f"  → Sent OP_SET_CLK_DIV  val={val} (div-by-{2**(val+1)})")
+            print(f"  ← Response raw={resp:#06x}")
 
         else:
             print(f"  ✗ Unknown choice: '{choice}'")

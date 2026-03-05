@@ -20,6 +20,7 @@ OP_UPDATE      = 0x2
 OP_READ        = 0x3
 OP_SET_CS_WAIT = 0x4
 OP_RESET_BUF   = 0x5
+OP_SET_CLK_DIV = 0x6
 
 # Response opcodes
 OP_RESP_VALID       = 0x1
@@ -113,6 +114,11 @@ class SpiMasterDriver:
         """Send OP_RESET_BUF."""
         await self.send_word(OP_RESET_BUF << 12)
 
+    async def cmd_set_clk_div(self, val_3bit):
+        """Send OP_SET_CLK_DIV. val=0→/2, 1→/4, 2→/8 (default), 3→/16, etc."""
+        word = (OP_SET_CLK_DIV << 12) | (val_3bit & 0x7)
+        await self.send_word(word)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Clock / Reset
@@ -141,12 +147,15 @@ async def start_clocks(dut, sys_period_ns=10, ram_period_ns=10, spi_half_ns=200)
 # Response Parsing
 # ─────────────────────────────────────────────────────────────────────────────
 def parse_read_response(resp):
-    """Parse OP_READ response → (opcode, valid_bit, sum_signed)."""
+    """Parse OP_READ response → (opcode, valid_bit, sum_signed).
+
+    Wire format: [15:12] opcode | [11] valid | [10:0] sum (11-bit two's complement)
+    """
     opcode = (resp >> 12) & 0xF
     payload = resp & 0xFFF
     valid_bit = (payload >> 11) & 1
-    sum_raw = payload & 0x7FF
-    sum_signed = sum_raw - 2048 if sum_raw >= 1024 else sum_raw
+    sum_raw = payload & 0x7FF  # 11-bit unsigned
+    sum_signed = sum_raw - 2048 if sum_raw >= 1024 else sum_raw  # 11-bit two's complement
     return opcode, valid_bit, sum_signed
 
 

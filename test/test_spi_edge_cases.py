@@ -131,20 +131,15 @@ async def test_buffer_overflow_eighth(dut):
 
 @cocotb.test()
 async def test_update_before_weights(dut):
-    """Send OP_UPDATE with no weights loaded — should be ignored gracefully."""
+    """Send OP_UPDATE with no weights loaded — ignored, DUT stays responsive."""
     spi = await start_clocks(dut)
 
-    # Send update with empty buffer — perceptron.v guards: update only if
-    # no_processed_in_buffer == no_in_buffer, which is 0==0 — it enters
-    # STATE_UPDATE but no_in_buffer==0 so nothing iterates.
-    # It should not crash. We verify by doing a normal flow afterward.
+    # Send update with empty buffer — perceptron.v guards with no_in_buffer > 0,
+    # so it stays in STATE_PREDICT and the update is silently ignored.
     await spi.cmd_update(sign=1)
     await ClockCycles(dut.clk, 50)
 
-    # Normal prediction flow should still work
-    await spi.cmd_reset_buffer()
-    await ClockCycles(dut.clk, 20)
-
+    # Normal prediction flow should work without needing a reset_buffer
     set_ram(dut, ram_addr(0, 0x99), to_unsigned_8(33))
     await spi.cmd_add_weight(0x99)
 
@@ -156,7 +151,7 @@ async def test_update_before_weights(dut):
     assert sum_signed == 33, \
         f"After empty update, expected sum 33, got {sum_signed}"
 
-    dut._log.info(f"Update-before-weights recovery: sum={sum_signed} ✓")
+    dut._log.info(f"Update-before-weights ignored: sum={sum_signed}")
 
 
 @cocotb.test()

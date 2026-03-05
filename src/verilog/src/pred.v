@@ -47,6 +47,7 @@ module pred_top (
     // Internal wires: pred_slave_spi → ram_interface
     // -----------------------------------------------------------------
     wire [7:0] cs_wait_cycles;
+    wire [2:0] spi_clk_div;
 
     // -----------------------------------------------------------------
     // Internal wires: perceptron ↔ ram_interface
@@ -94,7 +95,8 @@ module pred_top (
         .update_sign(slave_update_sign),
 
         // Configuration → ram_interface
-        .cs_wait_cycles(cs_wait_cycles)
+        .cs_wait_cycles(cs_wait_cycles),
+        .spi_clk_div(spi_clk_div)
     );
 
     perceptron perc (
@@ -130,6 +132,7 @@ module pred_top (
         .rst_n(rst_n),
 
         .cs_wait_cycles(cs_wait_cycles),
+        .spi_clk_div(spi_clk_div),
 
         .addr(ram_addr),
         .start_read(ram_start_read),

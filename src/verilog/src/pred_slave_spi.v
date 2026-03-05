@@ -26,7 +26,8 @@ module pred_slave_spi (
     output reg update_sign,         // LSB of payload for Update
 
     // Configuration outputs
-    output reg [7:0] cs_wait_cycles // Runtime-configurable CS wait
+    output reg [7:0] cs_wait_cycles, // Runtime-configurable CS wait
+    output reg [2:0] spi_clk_div     // SPI master clock divisor bit-select (div = 2^(n+1))
 );
 
     // SPI Signals
@@ -89,6 +90,7 @@ module pred_slave_spi (
     localparam OP_READ         = 4'b0011;
     localparam OP_SET_CS_WAIT  = 4'b0100;
     localparam OP_RESET_BUF    = 4'b0101;
+    localparam OP_SET_CLK_DIV  = 4'b0110;
 
     // Opcodes (sent in response)
     localparam OP_WRITE_READ_VALID   = 4'b0001;
@@ -110,6 +112,7 @@ module pred_slave_spi (
             index <= 12'd0;
             update_sign <= 1'b0;
             cs_wait_cycles <= 8'd15;
+            spi_clk_div <= 3'd2;  // Default: div-by-8 (100MHz → 12.5MHz)
             update_done_flag <= 1'b0;
         end else begin
             spi_reset <= 1'b0;
@@ -153,6 +156,10 @@ module pred_slave_spi (
                     end
                     OP_RESET_BUF: begin
                         reset_buffer_valid <= 1'b1;
+                        spi_data_send <= 16'd0;
+                    end
+                    OP_SET_CLK_DIV: begin
+                        spi_clk_div <= spi_data_recv[2:0];
                         spi_data_send <= 16'd0;
                     end
                     default: begin

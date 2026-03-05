@@ -16,7 +16,7 @@ from cocotb.triggers import Timer, ClockCycles
 import random
 from helpers import start_clocks, OP_RESP_VALID
 
-TRACE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trace.txt")
+TRACE_PATH = os.path.join(os.path.dirname(__file__), "data", "trace.txt")
 MAX_BRANCHES = 100  # Limit for simulation time
 
 

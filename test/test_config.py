@@ -4,6 +4,7 @@ Configuration/control tests for pred_top.
 Tests:
   - test_set_cs_wait:  Verify OP_SET_CS_WAIT changes the register
   - test_reset_buffer: Verify OP_RESET_BUF clears state mid-prediction
+  - test_set_clk_div:  Verify OP_SET_CLK_DIV changes the SPI clock divisor
 """
 
 import cocotb
@@ -114,3 +115,56 @@ async def test_double_reset_isolation(dut):
     assert valid2 == 1, "Valid bit should be 1"
     assert sum2 == 25, f"After reset+new weight, expected 25, got {sum2}"
     dut._log.info(f"Double reset isolation: sum={sum2} (isolated from first {sum1}) ✓")
+
+
+@cocotb.test()
+async def test_set_clk_div(dut):
+    """Verify OP_SET_CLK_DIV changes the SPI master clock divisor."""
+    spi = await start_clocks(dut)
+
+    # Check default: 2 (div-by-8, 100MHz → 12.5MHz)
+    clk_div = int(dut.dut.slave.spi_clk_div.value)
+    assert clk_div == 2, f"Expected default clk_div=2, got {clk_div}"
+
+    # Set to 3 (div-by-16)
+    await spi.cmd_set_clk_div(3)
+    await ClockCycles(dut.clk, 10)
+
+    clk_div = int(dut.dut.slave.spi_clk_div.value)
+    assert clk_div == 3, f"Expected clk_div=3, got {clk_div}"
+
+    # Verify functionality still works at the new clock rate
+    set_ram(dut, ram_addr(0, 0x42), to_unsigned_8(77))
+    await spi.cmd_add_weight(0x42)
+
+    opcode, valid_bit, sum_signed = await spi.cmd_read_poll(max_attempts=20)
+    assert opcode == OP_RESP_VALID, f"Expected VALID at clk_div=3, got {opcode:#x}"
+    assert sum_signed == 77, f"Expected 77 at clk_div=3, got {sum_signed}"
+
+    # Restore default
+    await spi.cmd_set_clk_div(2)
+    await ClockCycles(dut.clk, 10)
+    clk_div = int(dut.dut.slave.spi_clk_div.value)
+    assert clk_div == 2, f"Expected restored clk_div=2, got {clk_div}"
+
+
+@cocotb.test()
+async def test_set_clk_div_boundaries(dut):
+    """Set clk_div to 0 (fastest, /2) and 7 (slowest, /256) — both accepted."""
+    spi = await start_clocks(dut)
+
+    # Fastest: div-by-2
+    await spi.cmd_set_clk_div(0)
+    await ClockCycles(dut.clk, 10)
+    clk_div = int(dut.dut.slave.spi_clk_div.value)
+    assert clk_div == 0, f"Expected clk_div=0, got {clk_div}"
+
+    # Slowest: div-by-256
+    await spi.cmd_set_clk_div(7)
+    await ClockCycles(dut.clk, 10)
+    clk_div = int(dut.dut.slave.spi_clk_div.value)
+    assert clk_div == 7, f"Expected clk_div=7, got {clk_div}"
+
+    # Restore default
+    await spi.cmd_set_clk_div(2)
+    await ClockCycles(dut.clk, 10)

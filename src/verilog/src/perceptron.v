@@ -104,7 +104,7 @@ module perceptron (
                             no_in_buffer <= no_in_buffer + 3'd1;
                         end
 
-                        if (update && no_processed_in_buffer == no_in_buffer) begin
+                        if (update && no_in_buffer > 0 && no_processed_in_buffer == no_in_buffer) begin
                             no_processed_in_buffer <= 3'd0;
                             state <= STATE_UPDATE;
                         end

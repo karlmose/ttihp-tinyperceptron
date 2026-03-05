@@ -175,3 +175,57 @@ async def test_double_saturation_negative(dut):
     assert to_signed_8(val) == -128, f"After 2nd dec, expected -128, got {to_signed_8(val)}"
 
     dut._log.info("Double saturation -128 ✓")
+
+
+@cocotb.test()
+async def test_write_then_read_roundtrip(dut):
+    """Write via SPI update, then read the updated weight back via prediction."""
+    spi = await start_clocks(dut)
+
+    # Start with weight = 0 at index 0xAA
+    set_ram(dut, ram_addr(0, 0xAA), to_unsigned_8(0))
+
+    # Predict + increment: 0 → 1
+    await spi.cmd_add_weight(0xAA)
+    await spi.cmd_read_poll()
+    await spi.cmd_update_and_wait(sign=1)
+
+    val = get_ram(dut, ram_addr(0, 0xAA))
+    assert to_signed_8(val) == 1, f"After inc, expected 1, got {to_signed_8(val)}"
+
+    # Now read the same weight back via a new prediction — sum should be 1
+    await spi.cmd_add_weight(0xAA)
+    opcode, valid_bit, sum_signed = await spi.cmd_read_poll()
+
+    assert opcode == 0x1, f"Expected VALID, got {opcode:#x}"
+    assert valid_bit == 1
+    assert sum_signed == 1, f"Expected sum 1 after roundtrip, got {sum_signed}"
+
+
+@cocotb.test()
+async def test_multi_cycle_predict_update(dut):
+    """Three consecutive predict-update cycles on the same weight."""
+    spi = await start_clocks(dut)
+
+    set_ram(dut, ram_addr(0, 0x77), to_unsigned_8(10))
+
+    # Cycle 1: predict (sum=10), increment → 11
+    await spi.cmd_add_weight(0x77)
+    opcode, _, sum1 = await spi.cmd_read_poll()
+    assert opcode == 0x1 and sum1 == 10
+    await spi.cmd_update_and_wait(sign=1)
+
+    # Cycle 2: predict (sum=11), decrement → 10
+    await spi.cmd_add_weight(0x77)
+    opcode, _, sum2 = await spi.cmd_read_poll()
+    assert opcode == 0x1 and sum2 == 11, f"Cycle 2: expected 11, got {sum2}"
+    await spi.cmd_update_and_wait(sign=0)
+
+    # Cycle 3: predict (sum=10), increment → 11
+    await spi.cmd_add_weight(0x77)
+    opcode, _, sum3 = await spi.cmd_read_poll()
+    assert opcode == 0x1 and sum3 == 10, f"Cycle 3: expected 10, got {sum3}"
+    await spi.cmd_update_and_wait(sign=1)
+
+    val = get_ram(dut, ram_addr(0, 0x77))
+    assert to_signed_8(val) == 11, f"Final weight expected 11, got {to_signed_8(val)}"

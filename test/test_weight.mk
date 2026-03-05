@@ -3,7 +3,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_ROOT = $(PWD)/../..
+VERILOG_ROOT = $(PWD)/../src/verilog
 
 # RTL sources
 VERILOG_SOURCES += $(VERILOG_ROOT)/src/ram_interface.v

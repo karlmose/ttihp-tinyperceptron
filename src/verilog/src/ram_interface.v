@@ -6,6 +6,7 @@ module ram_interface (
     input wire rst_n,
 
     input wire [7:0] cs_wait_cycles, // Configurable CS recovery time
+    input wire [2:0] spi_clk_div,   // Clock divisor bit-select (div = 2^(n+1))
 
     input wire [12:0] addr,     // 13-bit address
     input wire start_read,      // Pulse to start reading
@@ -48,17 +49,21 @@ module ram_interface (
     assign busy = (state != STATE_IDLE) || (wait_cnt != 0);
 
     // -------------------------------------------------------------------------
-    // Clock Divider (System / 8) -> Generates toggle for SPI Logic
+    // Configurable Clock Divider — free-running counter, bit-select via spi_clk_div
+    // spi_clk_div=0 → counter[0] → div-by-2
+    // spi_clk_div=2 → counter[2] → div-by-8 (default, 100MHz → 12.5MHz)
     // -------------------------------------------------------------------------
-    wire clk_div_ready;
+    reg [7:0] clk_div_counter;
     reg clk_div_reset;
-    
-    clock_divider #(.DIV_N(3)) clk_gen (
-        .clk_in(clk),
-        .clk_out(sclk_gend),
-        .do_reset(clk_div_reset),
-        .is_ready(clk_div_ready)
-    );
+
+    always @(posedge clk) begin
+        if (clk_div_reset)
+            clk_div_counter <= 8'd0;
+        else
+            clk_div_counter <= clk_div_counter + 8'd1;
+    end
+
+    assign sclk_gend = clk_div_counter[spi_clk_div];
 
     // -------------------------------------------------------------------------
     // SPI Master Module

@@ -18,6 +18,7 @@ async def do_start(dut):
     dut.dec.value = 0
     dut.spi_miso.value = 0
     dut.cs_wait_cycles.value = 15  # Was a parameter, now a wire input
+    dut.spi_clk_div.value = 2     # div-by-8
     
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
