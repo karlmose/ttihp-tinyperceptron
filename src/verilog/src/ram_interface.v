@@ -6,7 +6,7 @@ module ram_interface (
     input wire rst_n,
 
     input wire [7:0] cs_wait_cycles, // Configurable CS recovery time
-    input wire [2:0] spi_clk_div,   // Clock divisor bit-select (div = 2^(n+1))
+    input wire [1:0] spi_clk_div,   // Clock divisor bit-select (div = 2^(n+1))
 
     input wire [12:0] addr,     // 13-bit address
     input wire start_read,      // Pulse to start reading
@@ -52,15 +52,17 @@ module ram_interface (
     // Configurable Clock Divider — free-running counter, bit-select via spi_clk_div
     // spi_clk_div=0 → counter[0] → div-by-2
     // spi_clk_div=1 → counter[1] → div-by-4 (default, 50MHz → 12.5MHz)
+    // spi_clk_div=2 → counter[2] → div-by-8
+    // spi_clk_div=3 → counter[3] → div-by-16
     // -------------------------------------------------------------------------
-    reg [7:0] clk_div_counter;
+    reg [3:0] clk_div_counter;
     reg clk_div_reset;
 
     always @(posedge clk) begin
         if (clk_div_reset)
-            clk_div_counter <= 8'd0;
+            clk_div_counter <= 4'd0;
         else
-            clk_div_counter <= clk_div_counter + 8'd1;
+            clk_div_counter <= clk_div_counter + 4'd1;
     end
 
     assign sclk_gend = clk_div_counter[spi_clk_div];

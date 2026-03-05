@@ -144,13 +144,13 @@ async def test_interactive(dut):
 
         # ── OP_SET_CLK_DIV ──────────────────────────────────────────
         elif choice == "6":
-            raw = input("  Clock div bit-select (0=/2, 1=/4, 2=/8, 3=/16, ..., 7=/256) > ").strip()
+            raw = input("  Clock div bit-select (0=/2, 1=/4, 2=/8, 3=/16) > ").strip()
             try:
                 val = int(raw, 0)
             except ValueError:
                 print(f"  ✗ Invalid value: {raw}")
                 continue
-            val &= 0x7
+            val &= 0x3
 
             word = (OP_SET_CLK_DIV << 12) | val
             resp = await spi.send_word(word)

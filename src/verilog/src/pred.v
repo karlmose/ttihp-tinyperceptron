@@ -47,7 +47,7 @@ module pred_top (
     // Internal wires: pred_slave_spi → ram_interface
     // -----------------------------------------------------------------
     wire [7:0] cs_wait_cycles;
-    wire [2:0] spi_clk_div;
+    wire [1:0] spi_clk_div;
 
     // -----------------------------------------------------------------
     // Internal wires: perceptron ↔ ram_interface

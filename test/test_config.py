@@ -150,7 +150,7 @@ async def test_set_clk_div(dut):
 
 @cocotb.test()
 async def test_set_clk_div_boundaries(dut):
-    """Set clk_div to 0 (fastest, /2) and 7 (slowest, /256) — both accepted."""
+    """Set clk_div to 0 (fastest, /2) and 3 (slowest, /16) — both accepted."""
     spi = await start_clocks(dut)
 
     # Fastest: div-by-2
@@ -159,12 +159,12 @@ async def test_set_clk_div_boundaries(dut):
     clk_div = int(dut.dut.slave.spi_clk_div.value)
     assert clk_div == 0, f"Expected clk_div=0, got {clk_div}"
 
-    # Slowest: div-by-256
-    await spi.cmd_set_clk_div(7)
+    # Slowest: div-by-16
+    await spi.cmd_set_clk_div(3)
     await ClockCycles(dut.clk, 10)
     clk_div = int(dut.dut.slave.spi_clk_div.value)
-    assert clk_div == 7, f"Expected clk_div=7, got {clk_div}"
+    assert clk_div == 3, f"Expected clk_div=3, got {clk_div}"
 
     # Restore default
-    await spi.cmd_set_clk_div(2)
+    await spi.cmd_set_clk_div(1)
     await ClockCycles(dut.clk, 10)

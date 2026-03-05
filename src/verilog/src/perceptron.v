@@ -4,12 +4,15 @@
 `default_nettype none
 `timescale 1ns/1ps
 
-module perceptron (
+module perceptron #(
+    parameter ADDR_WIDTH = 10,
+    parameter MAX_WEIGHTS = 4
+) (
     input wire clk,
     input wire rst_n,
 
     // Control inputs (from pred_slave_spi)
-    input wire [9:0] weight_addr,
+    input wire [ADDR_WIDTH-1:0] weight_addr,
     input wire add_weight,
     input wire reset_buffer,
     input wire update,
@@ -22,7 +25,7 @@ module perceptron (
     output wire update_done,
 
     // RAM interface control (directly to ram_interface)
-    output wire [12:0] ram_addr,
+    output wire [ADDR_WIDTH+2:0] ram_addr,
     output wire ram_start_read,
     output wire ram_inc,
     output wire ram_dec,
@@ -38,7 +41,7 @@ module perceptron (
 
     // Registers
     reg [10:0] sum_reg;
-    reg [69:0] index_buffer; // 7x10 bit addresses
+    reg [MAX_WEIGHTS*ADDR_WIDTH-1:0] index_buffer;
     reg [2:0] no_in_buffer;
     reg [2:0] no_processed_in_buffer;
     reg state;
@@ -54,8 +57,8 @@ module perceptron (
     assign sum = sum_reg;
     assign update_done = update_done_reg;
 
-    // RAM interface address: {buffer_slot[2:0], index[9:0]}
-    assign ram_addr = {no_processed_in_buffer, index_buffer[no_processed_in_buffer * 10 +: 10]};
+    // RAM interface address: {buffer_slot[2:0], index[ADDR_WIDTH-1:0]}
+    assign ram_addr = {no_processed_in_buffer, index_buffer[no_processed_in_buffer * ADDR_WIDTH +: ADDR_WIDTH]};
 
     // Read when not busy and we have unprocessed entries
     assign ram_start_read = (!ram_busy && no_processed_in_buffer < no_in_buffer) &&
@@ -74,7 +77,7 @@ module perceptron (
             ram_write_done_d <= 1'b0;
             data_ready_for_write <= 1'b0;
             sum_reg <= 11'd0;
-            index_buffer <= 70'd0;
+            index_buffer <= {(MAX_WEIGHTS*ADDR_WIDTH){1'b0}};
             no_in_buffer <= 3'd0;
             no_processed_in_buffer <= 3'd0;
             update_done_reg <= 1'b0;
@@ -99,8 +102,8 @@ module perceptron (
                             end
                         end
 
-                        if (add_weight && no_in_buffer < 7) begin
-                            index_buffer[no_in_buffer * 10 +: 10] <= weight_addr;
+                        if (add_weight && no_in_buffer < MAX_WEIGHTS[2:0]) begin
+                            index_buffer[no_in_buffer * ADDR_WIDTH +: ADDR_WIDTH] <= weight_addr;
                             no_in_buffer <= no_in_buffer + 3'd1;
                         end
 

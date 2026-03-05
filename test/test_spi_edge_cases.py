@@ -4,8 +4,8 @@ SPI edge-case tests for pred_top.
 Tests:
   - test_rapid_back_to_back:       Minimal inter-frame spacing
   - test_invalid_opcode:           Unknown opcode doesn't crash DUT
-  - test_max_buffer_seven_weights: 7 weights (max) all accumulated
-  - test_buffer_overflow_eighth:   8th weight silently ignored
+  - test_max_buffer_four_weights:  4 weights (max) all accumulated
+  - test_buffer_overflow_fifth:    5th weight silently ignored
   - test_update_before_weights:    OP_UPDATE with empty buffer
   - test_read_before_weights:      OP_READ with no weights → INVALID
 """
@@ -75,13 +75,13 @@ async def test_invalid_opcode(dut):
 
 
 @cocotb.test()
-async def test_max_buffer_seven_weights(dut):
-    """Add exactly 7 weights (buffer maximum), verify all contribute to sum."""
+async def test_max_buffer_four_weights(dut):
+    """Add exactly 4 weights (buffer maximum), verify all contribute to sum."""
     spi = await start_clocks(dut)
 
-    # 7 distinct weights: +1 through +7 → sum = 28
-    weight_vals = [1, 2, 3, 4, 5, 6, 7]
-    indices = [0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70]
+    # 4 distinct weights: +1 through +4 → sum = 10
+    weight_vals = [1, 2, 3, 4]
+    indices = [0x10, 0x20, 0x30, 0x40]
 
     for slot, (idx, w) in enumerate(zip(indices, weight_vals)):
         set_ram(dut, ram_addr(slot, idx), to_unsigned_8(w))
@@ -96,37 +96,37 @@ async def test_max_buffer_seven_weights(dut):
         f"Expected VALID, got {opcode:#x}"
     assert valid_bit == 1, "Valid bit should be 1"
     assert sum_signed == expected_sum, \
-        f"Expected sum {expected_sum} with 7 weights, got {sum_signed}"
+        f"Expected sum {expected_sum} with 4 weights, got {sum_signed}"
 
-    dut._log.info(f"7-weight buffer: sum={sum_signed} (expected {expected_sum}) ✓")
+    dut._log.info(f"4-weight buffer: sum={sum_signed} (expected {expected_sum}) ✓")
 
 
 @cocotb.test()
-async def test_buffer_overflow_eighth(dut):
-    """Add 8 weights — 8th should be silently ignored (buffer is 7 deep)."""
+async def test_buffer_overflow_fifth(dut):
+    """Add 5 weights — 5th should be silently ignored (buffer is 4 deep)."""
     spi = await start_clocks(dut)
 
-    # 8 weights: +1 through +8
-    weight_vals = [1, 2, 3, 4, 5, 6, 7, 8]
-    indices = [0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]
+    # 5 weights: +1 through +5
+    weight_vals = [1, 2, 3, 4, 5]
+    indices = [0x10, 0x20, 0x30, 0x40, 0x50]
 
     for slot, (idx, w) in enumerate(zip(indices, weight_vals)):
-        set_ram(dut, ram_addr(slot % 7, idx), to_unsigned_8(w))
+        set_ram(dut, ram_addr(slot % 4, idx), to_unsigned_8(w))
 
     for idx in indices:
         await spi.cmd_add_weight(idx)
 
     opcode, valid_bit, sum_signed = await spi.cmd_read_poll()
 
-    # Only first 7 should contribute: sum = 1+2+3+4+5+6+7 = 28
-    expected_sum = sum(weight_vals[:7])
+    # Only first 4 should contribute: sum = 1+2+3+4 = 10
+    expected_sum = sum(weight_vals[:4])
     assert opcode == OP_RESP_VALID, \
         f"Expected VALID, got {opcode:#x}"
     assert valid_bit == 1, "Valid bit should be 1"
     assert sum_signed == expected_sum, \
-        f"Expected sum {expected_sum} (8th ignored), got {sum_signed}"
+        f"Expected sum {expected_sum} (5th ignored), got {sum_signed}"
 
-    dut._log.info(f"Buffer overflow: sum={sum_signed} (expected {expected_sum}, 8th ignored) ✓")
+    dut._log.info(f"Buffer overflow: sum={sum_signed} (expected {expected_sum}, 5th ignored) ✓")
 
 
 @cocotb.test()

@@ -27,7 +27,7 @@ module pred_slave_spi (
 
     // Configuration outputs
     output reg [7:0] cs_wait_cycles, // Runtime-configurable CS wait
-    output reg [2:0] spi_clk_div     // SPI master clock divisor bit-select (div = 2^(n+1))
+    output reg [1:0] spi_clk_div     // SPI master clock divisor bit-select (div = 2^(n+1))
 );
 
     // SPI Signals
@@ -112,7 +112,7 @@ module pred_slave_spi (
             index <= 12'd0;
             update_sign <= 1'b0;
             cs_wait_cycles <= 8'd8;
-            spi_clk_div <= 3'd1;  // Default: div-by-4 (50MHz → 12.5MHz)
+            spi_clk_div <= 2'd1;  // Default: div-by-4 (50MHz → 12.5MHz)
             update_done_flag <= 1'b0;
         end else begin
             spi_reset <= 1'b0;
@@ -159,7 +159,7 @@ module pred_slave_spi (
                         spi_data_send <= 16'd0;
                     end
                     OP_SET_CLK_DIV: begin
-                        spi_clk_div <= spi_data_recv[2:0];
+                        spi_clk_div <= spi_data_recv[1:0];
                         spi_data_send <= 16'd0;
                     end
                     default: begin
