@@ -1,75 +1,62 @@
+// SPI master interface to external RAM — handles read/write with saturation
+
 `default_nettype none
 `timescale 1ns/1ps
 
 module ram_interface (
-    input wire clk,             // System Clock
+    input wire clk,
     input wire rst_n,
 
-    input wire [7:0] cs_wait_cycles, // Configurable CS recovery time
-    input wire [1:0] spi_clk_div,   // Clock divisor bit-select (div = 2^(n+1))
+    input wire [7:0] cs_wait_cycles,
+    input wire [1:0] spi_clk_div,    // 0=div2, 1=div4, 2=div8 (12.5MHz@100MHz), 3=div16
 
-    input wire [10:0] addr,     // 11-bit address (2-bit weight index + 9-bit addr)
-    input wire start_read,      // Pulse to start reading
-    input wire inc,             // Pulse to increment weight
-    input wire dec,             // Pulse to decrement weight
-    
-    output wire [7:0] weight,   // Last read/written weight
-    output reg read_valid,      // High when weight is read
-    output reg write_done,      // High when write is done
-    output wire busy,           // High during Transaction OR Recovery
-    
-    // SPI interface
+    input wire [10:0] addr,
+    input wire start_read,
+    input wire inc,
+    input wire dec,
+
+    output wire [7:0] weight,
+    output reg read_valid,
+    output reg write_done,
+    output wire busy,
+
     output wire spi_cs,
     output wire spi_sck,
     output wire spi_mosi,
     input wire spi_miso
 );
 
-    reg [7:0] wait_cnt;
+    reg [7:0] wait_counter;
 
-    // SPI Module Signals
-    wire sclk_gend; // Generated clock from divider
+    wire sclk_divided;
     wire spi_processing;
     reg spi_start;
-    reg [31:0] spi_data_to_send;
-    wire [31:0] spi_data_received;
+    reg [31:0] spi_tx_data;
+    wire [31:0] spi_rx_data;
     wire spi_ready;
-    
-    // Direct assignment as requested
-    assign weight = spi_data_received[7:0];
 
-    // States
-    localparam STATE_IDLE = 2'd0;
+    assign weight = spi_rx_data[7:0];
+
+    localparam STATE_IDLE      = 2'd0;
     localparam STATE_START_SPI = 2'd1;
-    localparam STATE_WAIT_SPI = 2'd2;
+    localparam STATE_WAIT_SPI  = 2'd2;
 
     reg [2:0] state;
-    reg is_write_op;
+    reg is_write;
 
-    assign busy = (state != STATE_IDLE) || (wait_cnt != 0);
+    assign busy = (state != STATE_IDLE) || (wait_counter != 0);
 
-    // -------------------------------------------------------------------------
-    // Configurable Clock Divider — free-running counter, bit-select via spi_clk_div
-    // spi_clk_div=0 → counter[0] → div-by-2
-    // spi_clk_div=1 → counter[1] → div-by-4 (default, 50MHz → 12.5MHz)
-    // spi_clk_div=2 → counter[2] → div-by-8
-    // spi_clk_div=3 → counter[3] → div-by-16
-    // -------------------------------------------------------------------------
+    // Free-running clock divider — bit-select via spi_clk_div
     reg [3:0] clk_div_counter;
     reg clk_div_reset;
 
     always @(posedge clk) begin
-        if (clk_div_reset)
-            clk_div_counter <= 4'd0;
-        else
-            clk_div_counter <= clk_div_counter + 4'd1;
+        if (clk_div_reset) clk_div_counter <= 4'd0;
+        else               clk_div_counter <= clk_div_counter + 4'd1;
     end
 
-    assign sclk_gend = clk_div_counter[spi_clk_div];
+    assign sclk_divided = clk_div_counter[spi_clk_div];
 
-    // -------------------------------------------------------------------------
-    // SPI Master Module
-    // -------------------------------------------------------------------------
     reg spi_reset;
 
     spi_module #(
@@ -80,15 +67,15 @@ module ram_interface (
     ) spi_inst (
         .master_clock(clk),
         .SCLK_OUT(spi_sck),
-        .SCLK_IN(sclk_gend),
+        .SCLK_IN(sclk_divided),
         .SS_OUT(spi_cs),
         .SS_IN(1'b1),
         .OUTPUT_SIGNAL(spi_mosi),
         .processing_word(spi_processing),
         .process_next_word(spi_start),
-        .data_word_send(spi_data_to_send),
+        .data_word_send(spi_tx_data),
         .INPUT_SIGNAL(spi_miso),
-        .data_word_recv(spi_data_received),
+        .data_word_recv(spi_rx_data),
         .do_reset(spi_reset),
         .is_ready(spi_ready)
     );
@@ -99,82 +86,67 @@ module ram_interface (
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            state <= STATE_IDLE;
-            wait_cnt <= 8'd0;
-            
-            spi_start <= 1'b0;
-            spi_data_to_send <= 32'd0;
-            is_write_op <= 1'b0;
-            read_valid <= 1'b0;
-            write_done <= 1'b0;
-            
-            spi_reset <= 1'b1;
+            state         <= STATE_IDLE;
+            wait_counter  <= 8'd0;
+            spi_start     <= 1'b0;
+            spi_tx_data   <= 32'd0;
+            is_write      <= 1'b0;
+            read_valid    <= 1'b0;
+            write_done    <= 1'b0;
+            spi_reset     <= 1'b1;
             clk_div_reset <= 1'b1;
         end else begin
-            // Clear resets
-            spi_reset <= 1'b0;
+            spi_reset     <= 1'b0;
             clk_div_reset <= 1'b0;
 
-            // Wait Count Logic
-            if (!spi_cs) begin 
-                wait_cnt <= cs_wait_cycles;
-            end else if (wait_cnt > 0) begin
-                wait_cnt <= wait_cnt - 1'b1;
-            end
+            if (!spi_cs)
+                wait_counter <= cs_wait_cycles;
+            else if (wait_counter > 0)
+                wait_counter <= wait_counter - 1'b1;
 
-             case (state)
+            case (state)
                 STATE_IDLE: begin
                     spi_start <= 1'b0;
 
-                    if (wait_cnt == 0 && spi_ready && !spi_processing) begin
+                    if (wait_counter == 0 && spi_ready && !spi_processing) begin
                         if (start_read) begin
-                            // READ
-                            is_write_op <= 1'b0;
-                            read_valid <= 1'b0;
-                            write_done <= 1'b0;
-                            
-                            spi_data_to_send <= {CMD_READ, full_addr, 8'h00};
-                            spi_start <= 1'b1;
-                            state <= STATE_START_SPI;
+                            is_write    <= 1'b0;
+                            read_valid  <= 1'b0;
+                            write_done  <= 1'b0;
+                            spi_tx_data <= {CMD_READ, full_addr, 8'h00};
+                            spi_start   <= 1'b1;
+                            state       <= STATE_START_SPI;
                         end else if ((inc || dec) && read_valid) begin
-                            // WRITE (Inc/Dec) - Only if we have a valid weight read
-                            is_write_op <= 1'b1;
-                            read_valid <= 1'b0;
-                            write_done <= 1'b0;
-                            
-                            // Calculate next weight and send
-                            spi_data_to_send <= {CMD_WRITE, full_addr, 
+                            is_write    <= 1'b1;
+                            read_valid  <= 1'b0;
+                            write_done  <= 1'b0;
+                            spi_tx_data <= {CMD_WRITE, full_addr,
                                 (inc && !dec && weight != 8'h7F) ? weight + 8'd1 :
                                 (dec && !inc && weight != 8'h80) ? weight - 8'd1 :
                                 weight
                             };
-                            
-                            read_valid <= 1'b0; 
-                            
                             spi_start <= 1'b1;
-                            state <= STATE_START_SPI;
+                            state     <= STATE_START_SPI;
                         end
                     end
                 end
-                
+
                 STATE_START_SPI: begin
                     if (spi_processing) begin
                         spi_start <= 1'b0;
-                        state <= STATE_WAIT_SPI;
+                        state     <= STATE_WAIT_SPI;
                     end
                 end
 
                 STATE_WAIT_SPI: begin
                     if (!spi_processing) begin
-                        if (is_write_op) begin
-                            write_done <= 1'b1;
-                        end else begin
-                            read_valid <= 1'b1;
-                        end
+                        if (is_write) write_done <= 1'b1;
+                        else          read_valid <= 1'b1;
                         state <= STATE_IDLE;
                     end
                 end
             endcase
         end
     end
+
 endmodule
