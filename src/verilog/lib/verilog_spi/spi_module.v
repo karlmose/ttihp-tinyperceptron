@@ -50,9 +50,14 @@ module spi_module
 	generate 
 	
 		if(SPI_MASTER) begin
-		
+
 			assign SCLK_OUT = (activate_sclk) ? SCLK_IN : (CPOL);
 			assign SS_OUT = (activate_ss) ? 1'b0 : 1'b1;
+
+		end else begin
+
+			assign SCLK_OUT = 1'b0;
+			assign SS_OUT = 1'b1;
 
 		end
 		

@@ -28,32 +28,32 @@ async def spi_send_word(dut, word_16bit, half_period=SPI_HALF_NS):
     received = 0
 
     # CS low
-    dut.ui_in.value = dut.ui_in.value.integer & ~(1 << 1)
-    await Timer(half_period * 2, units="ns")
+    dut.ui_in.value = dut.ui_in.value.to_unsigned() & ~(1 << 1)
+    await Timer(half_period * 2, unit="ns")
 
     for i in range(15, -1, -1):
         bit = (word_16bit >> i) & 1
         # Set MOSI (ui_in[2]), keep CS low (ui_in[1]=0), SCK low (ui_in[0]=0)
-        base = dut.ui_in.value.integer & ~0x7  # clear bits [2:0]
+        base = dut.ui_in.value.to_unsigned() & ~0x7  # clear bits [2:0]
         dut.ui_in.value = base | (bit << 2)     # MOSI = bit, SCK=0, CS=0
 
-        await Timer(half_period, units="ns")
+        await Timer(half_period, unit="ns")
 
         # SCK high
-        dut.ui_in.value = dut.ui_in.value.integer | 1  # ui_in[0] = 1
-        await Timer(1, units="ns")
+        dut.ui_in.value = dut.ui_in.value.to_unsigned() | 1  # ui_in[0] = 1
+        await Timer(1, unit="ns")
         received |= (int(dut.uo_out.value) & 1) << i  # sample MISO = uo_out[0]
 
-        await Timer(half_period - 1, units="ns")
+        await Timer(half_period - 1, unit="ns")
 
         # SCK low
-        dut.ui_in.value = dut.ui_in.value.integer & ~1  # ui_in[0] = 0
+        dut.ui_in.value = dut.ui_in.value.to_unsigned() & ~1  # ui_in[0] = 0
 
-    await Timer(half_period * 2, units="ns")
+    await Timer(half_period * 2, unit="ns")
 
     # CS high
-    dut.ui_in.value = dut.ui_in.value.integer | (1 << 1)
-    await Timer(half_period * 4, units="ns")
+    dut.ui_in.value = dut.ui_in.value.to_unsigned() | (1 << 1)
+    await Timer(half_period * 4, unit="ns")
 
     return received
 
@@ -63,7 +63,7 @@ async def test_tt_spi_smoke(dut):
     """Send OP_READ through TT pins with no weights — expect OP_RESP_INVALID."""
     dut._log.info("Start")
 
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
