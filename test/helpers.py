@@ -125,7 +125,8 @@ def to_unsigned_8(val):
     return val & 0xFF
 
 def ram_addr(slot, index):
-    return ((slot & 0x7) << 10) | (index & 0x3FF)
+    """Hardware address: {slot[1:0], index[8:0]} = 11 bits."""
+    return ((slot & 0x3) << 9) | (index & 0x1FF)
 
 def set_ram(dut, addr_16, value_8):
     dut.ram_slave.memory[addr_16].value = value_8
