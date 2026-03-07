@@ -9,7 +9,7 @@ CMD_WRITE = 0x02
 
 
 async def do_start(dut):
-    clock = Clock(dut.clk, 10, unit="ns")  # 100 MHz
+    clock = Clock(dut.clk, 10, unit="ns")  # 100 MHz sim clock
     cocotb.start_soon(clock.start())
 
     dut.rst_n.value = 0
@@ -18,8 +18,8 @@ async def do_start(dut):
     dut.inc.value = 0
     dut.dec.value = 0
     dut.spi_miso.value = 0
-    dut.cs_wait_cycles.value = 15    # Match default for 100MHz
-    dut.spi_clk_div.value = 2       # div-by-8: 100MHz / 8 = 12.5MHz
+    dut.cs_wait_cycles.value = 8     # Match default
+    dut.spi_clk_div.value = 2       # div-by-8 (match default)
 
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1

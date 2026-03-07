@@ -40,7 +40,7 @@ async def spi_send_word(dut, word_16bit, half_period=SPI_HALF_NS):
 @cocotb.test()
 async def test_tt_spi_smoke(dut):
     """Send OP_READ through TT pins with no weights — expect OP_RESP_INVALID."""
-    clock = Clock(dut.clk, 10, unit="ns")  # 100MHz
+    clock = Clock(dut.clk, 10, unit="ns")  # 100MHz sim clock
     cocotb.start_soon(clock.start())
 
     dut.ena.value = 1

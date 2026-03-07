@@ -8,7 +8,7 @@ module ram_interface (
     input wire rst_n,
 
     input wire [7:0] cs_wait_cycles,
-    input wire [1:0] spi_clk_div,    // 0=div2, 1=div4, 2=div8 (12.5MHz@100MHz), 3=div16
+    input wire [1:0] spi_clk_div,    // 0=div2, 1=div4, 2=div8 (default), 3=div16
 
     input wire [10:0] addr,
     input wire start_read,

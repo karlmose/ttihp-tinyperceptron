@@ -29,7 +29,7 @@ def load_trace(path, limit=MAX_BRANCHES):
 @cocotb.test()
 async def test_end_to_end_3clk(dut):
     """Run trace-driven learning with 3 realistic clock domains, SPI-only."""
-    SYS_PERIOD_NS = 10       # 100 MHz
+    SYS_PERIOD_NS = 10       # 100 MHz sim clock
     RAM_PERIOD_NS = 83.33    # 12 MHz (external RAM)
     SPI_HALF_NS   = 250      # ~2 MHz controller
 
@@ -43,7 +43,7 @@ async def test_end_to_end_3clk(dut):
         spi_half_ns=SPI_HALF_NS,
     )
 
-    dut._log.info(f"Clocks: sys={SYS_PERIOD_NS}ns (100MHz), "
+    dut._log.info(f"Clocks: sys={SYS_PERIOD_NS}ns, "
                   f"ram={RAM_PERIOD_NS}ns (12MHz), "
                   f"spi_half={SPI_HALF_NS}ns (~2MHz)")
 
