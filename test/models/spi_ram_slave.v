@@ -33,8 +33,8 @@ module spi_ram_slave #(
         memory[16'h1000] = 8'h42;
     end
 
-    assign spi_start_next = 1'b1;
     wire spi_start_next;
+    assign spi_start_next = 1'b1;
 
     spi_module #(
         .SPI_MASTER(1'b0),
