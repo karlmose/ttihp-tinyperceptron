@@ -13,14 +13,14 @@ from helpers import (
 async def test_set_cs_wait(dut):
     spi = await start_clocks(dut)
 
-    cs_wait = int(dut.dut.slave.cs_wait_cycles.value)
-    assert cs_wait == 8, f"Expected default 8, got {cs_wait}"
+    cs_wait = int(dut.dut.slave.cs_wait_cfg.value)
+    assert cs_wait == 3, f"Expected default 3, got {cs_wait}"
 
-    await spi.cmd_set_cs_wait(30)
+    await spi.cmd_set_cs_wait(5)
     await ClockCycles(dut.clk, 10)
 
-    cs_wait = int(dut.dut.slave.cs_wait_cycles.value)
-    assert cs_wait == 30, f"Expected 30, got {cs_wait}"
+    cs_wait = int(dut.dut.slave.cs_wait_cfg.value)
+    assert cs_wait == 5, f"Expected 5, got {cs_wait}"
 
 
 @cocotb.test()
@@ -48,15 +48,15 @@ async def test_set_cs_wait_boundaries(dut):
 
     await spi.cmd_set_cs_wait(0)
     await ClockCycles(dut.clk, 10)
-    assert int(dut.dut.slave.cs_wait_cycles.value) == 0
+    assert int(dut.dut.slave.cs_wait_cfg.value) == 0
 
-    await spi.cmd_set_cs_wait(255)
+    await spi.cmd_set_cs_wait(7)
     await ClockCycles(dut.clk, 10)
-    assert int(dut.dut.slave.cs_wait_cycles.value) == 255
+    assert int(dut.dut.slave.cs_wait_cfg.value) == 7
 
-    await spi.cmd_set_cs_wait(8)
+    await spi.cmd_set_cs_wait(3)
     await ClockCycles(dut.clk, 10)
-    assert int(dut.dut.slave.cs_wait_cycles.value) == 8
+    assert int(dut.dut.slave.cs_wait_cfg.value) == 3
 
 
 @cocotb.test()
