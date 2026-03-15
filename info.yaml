@@ -11,7 +11,7 @@ project:
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_example"
+  top_module:  "tt_um_tinyperceptron_karlmose"
 
   # List your project's source files here.
   # Source files must be in ./src and you must list each source file separately, one per line.
@@ -31,9 +31,9 @@ project:
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: ""
-  ui[1]: ""
-  ui[2]: ""
+  ui[0]: "SPI slave SCK"
+  ui[1]: "SPI slave CS"
+  ui[2]: "SPI slave MOSI"
   ui[3]: ""
   ui[4]: ""
   ui[5]: ""
@@ -41,7 +41,7 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
+  uo[0]: "SPI slave MISO"
   uo[1]: ""
   uo[2]: ""
   uo[3]: ""
@@ -51,10 +51,10 @@ pinout:
   uo[7]: ""
 
   # Bidirectional pins
-  uio[0]: "SPI"
-  uio[1]: ""
-  uio[2]: ""
-  uio[3]: ""
+  uio[0]: "RAM SPI CS (output)"
+  uio[1]: "RAM SPI MOSI (output)"
+  uio[2]: "RAM SPI MISO (input)"
+  uio[3]: "RAM SPI SCK (output)"
   uio[4]: ""
   uio[5]: ""
   uio[6]: ""
