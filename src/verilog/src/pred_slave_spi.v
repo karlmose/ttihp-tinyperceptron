@@ -22,7 +22,7 @@ module pred_slave_spi (
     output reg [8:0] index,
     output reg update_sign,
 
-    output reg [7:0] cs_wait_cycles,
+    output reg [2:0] cs_wait_cfg,
     output reg [1:0] spi_clk_div
 );
 
@@ -97,7 +97,7 @@ module pred_slave_spi (
             reset_buffer_valid  <= 1'b0;
             index               <= 9'd0;
             update_sign         <= 1'b0;
-            cs_wait_cycles      <= 8'd8;
+            cs_wait_cfg         <= 3'd3;
             spi_clk_div         <= 2'd2;   // div-by-8 default
             update_done_flag    <= 1'b0;
         end else begin
@@ -134,7 +134,7 @@ module pred_slave_spi (
                         end
                     end
                     OP_SET_CS_WAIT: begin
-                        cs_wait_cycles <= spi_data_recv[7:0];
+                        cs_wait_cfg <= spi_data_recv[2:0];
                         spi_data_send <= 16'd0;
                     end
                     OP_RESET_BUF: begin

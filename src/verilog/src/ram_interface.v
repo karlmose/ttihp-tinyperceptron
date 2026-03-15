@@ -7,7 +7,7 @@ module ram_interface (
     input wire clk,
     input wire rst_n,
 
-    input wire [7:0] cs_wait_cycles,
+    input wire [2:0] cs_wait_cycles,
     input wire [1:0] spi_clk_div,    // 0=div2, 1=div4, 2=div8 (default), 3=div16
 
     input wire [10:0] addr,
@@ -26,7 +26,7 @@ module ram_interface (
     input wire spi_miso
 );
 
-    reg [7:0] wait_counter;
+    reg [5:0] wait_counter;
 
     wire sclk_divided;
     wire spi_processing;
@@ -87,7 +87,7 @@ module ram_interface (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state         <= STATE_IDLE;
-            wait_counter  <= 8'd0;
+            wait_counter  <= 6'd0;
             spi_start     <= 1'b0;
             spi_tx_data   <= 32'd0;
             is_write      <= 1'b0;
@@ -100,7 +100,7 @@ module ram_interface (
             clk_div_reset <= 1'b0;
 
             if (!spi_cs)
-                wait_counter <= cs_wait_cycles;
+                wait_counter <= {cs_wait_cycles, 3'b000};
             else if (wait_counter > 0)
                 wait_counter <= wait_counter - 1'b1;
 

@@ -31,7 +31,7 @@ module pred_top (
     wire        cmd_reset_buffer;
     wire [8:0]  cmd_index;
     wire        cmd_update_sign;
-    wire [7:0]  cfg_cs_wait_cycles;
+    wire [2:0]  cfg_cs_wait_cfg;
     wire [1:0]  cfg_spi_clk_div;
 
     wire [10:0] ram_addr;
@@ -62,7 +62,7 @@ module pred_top (
         .reset_buffer_valid(cmd_reset_buffer),
         .index(cmd_index),
         .update_sign(cmd_update_sign),
-        .cs_wait_cycles(cfg_cs_wait_cycles),
+        .cs_wait_cfg(cfg_cs_wait_cfg),
         .spi_clk_div(cfg_spi_clk_div)
     );
 
@@ -91,7 +91,7 @@ module pred_top (
     ram_interface ram_if (
         .clk(clk),
         .rst_n(rst_n),
-        .cs_wait_cycles(cfg_cs_wait_cycles),
+        .cs_wait_cycles(cfg_cs_wait_cfg),
         .spi_clk_div(cfg_spi_clk_div),
         .addr(ram_addr),
         .start_read(ram_start_read),
